@@ -1,0 +1,39 @@
+# Web framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.18
+
+# Конфигурация
+pydantic==2.10.3
+pydantic-settings==2.6.1
+
+# База данных
+asyncpg==0.30.0
+
+# Celery + Redis
+celery==5.4.0
+redis==5.2.1
+
+# AI / Claude
+anthropic==0.40.0
+
+# Эмбеддинги
+openai==1.57.4
+
+# Парсинг документов
+PyMuPDF==1.25.0
+python-docx==1.1.2
+
+# HTTP клиент
+httpx==0.28.1
+requests==2.32.3
+
+# Хранилище R2 (S3-совместимое)
+boto3==1.35.90
+
+# Логирование
+loguru==0.7.3
+
+# HTML парсинг (для скрипта загрузки правовой базы)
+beautifulsoup4==4.12.3
+lxml==5.3.0
