@@ -1,8 +1,13 @@
 version: '3.9'
 
 # ────────────────────────────────────────────────────────────────
-# LegalTech RB — AI-анализ договоров по праву Республики Беларусь
-# Запуск: docker-compose up -d
+# LexAI.by — AI-анализ договоров для юристов Республики Беларусь
+# Версия 2.0 — с подпиской, Bepaid, Supabase Auth
+#
+# Запуск:
+#   cp .env.example .env       # заполнить значения
+#   docker compose up -d
+#   docker compose exec backend python scripts/seed_plans.py
 # ────────────────────────────────────────────────────────────────
 
 networks:
@@ -28,6 +33,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secure_pass}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # Автоматическое применение миграций при первом запуске
+      - ./migrations:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
     networks:
@@ -39,12 +46,18 @@ services:
       retries: 5
       start_period: 20s
 
-  # ── Redis (брокер задач Celery) ────────────────────────────────
+  # ── Redis (брокер Celery + кэш курсов валют) ──────────────────
   redis:
     image: redis:7-alpine
     container_name: legaltech-redis
     restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-}
     volumes:
       - redisdata:/data
     ports:
@@ -70,6 +83,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres_secure_pass}@pgvector:5432/legaltech
       REDIS_URL: redis://redis:6379
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "8000:8000"
     depends_on:
@@ -90,7 +104,7 @@ services:
       start_period: 30s
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
 
-  # ── Celery Worker ──────────────────────────────────────────────
+  # ── Celery Worker (обычная очередь) ───────────────────────────
   worker:
     build:
       context: ./backend
@@ -125,7 +139,36 @@ services:
       --queues=celery
       --hostname=worker@%h
 
-  # ── Flower (мониторинг Celery, опционально) ────────────────────
+  # ── Celery Priority Worker (очередь для FIRM тарифа) ──────────
+  worker-priority:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: legaltech-worker-priority
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres_secure_pass}@pgvector:5432/legaltech
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      pgvector:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - legaltech
+    volumes:
+      - ./backend:/app
+      - ./backend/logs:/app/logs
+    command: >
+      celery -A tasks.celery_app worker
+      --loglevel=info
+      --concurrency=4
+      --queues=priority
+      --hostname=priority-worker@%h
+
+  # ── Flower (мониторинг Celery) ────────────────────────────────
   flower:
     build:
       context: ./backend
@@ -157,10 +200,14 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
     container_name: legaltech-frontend
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
     ports:
       - "3000:3000"
     depends_on:
