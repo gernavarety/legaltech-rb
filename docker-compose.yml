@@ -168,6 +168,41 @@ services:
       --queues=priority
       --hostname=priority-worker@%h
 
+  # ── Celery Generation Worker (DOCX/PDF + LibreOffice) ─────────
+  # Отдельный worker с LibreOffice для задач генерации документов.
+  # Использует Dockerfile.worker (тяжелее, ~800 МБ).
+  worker-generation:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    container_name: legaltech-worker-generation
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres_secure_pass}@pgvector:5432/legaltech
+      REDIS_URL: redis://redis:6379
+      # LibreOffice требует HOME для временных файлов
+      HOME: /tmp
+    depends_on:
+      pgvector:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - legaltech
+    volumes:
+      - ./backend:/app
+      - ./backend/logs:/app/logs
+    # concurrency=2 — LibreOffice тяжёлый, не масштабировать выше 4
+    command: >
+      celery -A generation_task.celery_app worker
+      --loglevel=info
+      --concurrency=2
+      --queues=generation,priority
+      --hostname=generation-worker@%h
+      --max-tasks-per-child=50
+
   # ── Flower (мониторинг Celery) ────────────────────────────────
   flower:
     build:

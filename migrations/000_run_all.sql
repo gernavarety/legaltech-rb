@@ -21,4 +21,13 @@
 \echo '--- 006: alter documents ---'
 \i migrations/006_alter_documents.sql
 
+\echo '--- 007: document_templates ---'
+\i migrations/007_create_document_templates.sql
+
+\echo '--- 008: generated_documents ---'
+\i migrations/008_create_generated_documents.sql
+
+\echo '--- 009: plans generations columns ---'
+\i migrations/009_alter_plans_generations.sql
+
 \echo '=== Миграции применены ==='

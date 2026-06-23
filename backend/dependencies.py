@@ -47,6 +47,9 @@ class UserPlan:
             self.has_api_access = subscription["has_api_access"]
             self.has_priority_queue = subscription["has_priority_queue"]
             self.max_team_members = subscription["max_team_members"]
+            # Поля генератора документов (могут отсутствовать в старых записях)
+            self.generations_per_month = subscription.get("generations_per_month", 30)
+            self.has_pdf_download = subscription.get("has_pdf_download", True)
         else:
             # Нет активной подписки → free план
             self.plan_name = "free"
@@ -58,6 +61,8 @@ class UserPlan:
             self.has_api_access = False
             self.has_priority_queue = False
             self.max_team_members = 1
+            self.generations_per_month = 3
+            self.has_pdf_download = False
 
     @property
     def is_free(self) -> bool:

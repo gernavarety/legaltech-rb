@@ -286,3 +286,105 @@ export async function removeTeamMember(
 ): Promise<{ success: boolean }> {
   return apiRequest("DELETE", `/api/team/${encodeURIComponent(memberEmail)}`, { token });
 }
+
+// ── Генератор документов ──────────────────────────────────────────────
+
+export interface TemplateInfo {
+  slug: string;
+  name: string;
+  group_name: string;
+  description: string | null;
+  law_references: string[];
+  available_plans: string[];
+}
+
+export interface TemplateDetail extends TemplateInfo {
+  fields_schema: {
+    fields: Array<{
+      key: string;
+      label: string;
+      type: "text" | "textarea" | "number" | "date" | "select" | "boolean";
+      placeholder?: string;
+      required: boolean;
+      hint?: string;
+      options?: string[];
+    }>;
+  };
+}
+
+export interface GenerationStatus {
+  task_id: string;
+  status: "pending" | "processing" | "done" | "error";
+  template_name: string | null;
+  created_at: string | null;
+  download_url_docx: string | null;
+  download_url_pdf: string | null;
+  preview_text: string | null;
+  error_text: string | null;
+}
+
+export interface GenerationHistoryItem {
+  id: string;
+  template_slug: string;
+  template_name: string | null;
+  status: string;
+  created_at: string;
+  has_docx: boolean;
+  has_pdf: boolean;
+}
+
+export async function getTemplates(group?: string): Promise<TemplateInfo[]> {
+  const params = group ? `?group=${encodeURIComponent(group)}` : "";
+  return apiRequest<TemplateInfo[]>("GET", `/api/templates${params}`, {});
+}
+
+export async function getTemplateGroups(): Promise<string[]> {
+  return apiRequest<string[]>("GET", "/api/templates/groups", {});
+}
+
+export async function getTemplateDetail(slug: string): Promise<TemplateDetail> {
+  return apiRequest<TemplateDetail>("GET", `/api/templates/${slug}`, {});
+}
+
+export async function startGeneration(
+  templateSlug: string,
+  inputData: Record<string, unknown>,
+  token: string | null
+): Promise<{ task_id: string; status: string; message: string }> {
+  return apiRequest("POST", "/api/generate", {
+    body: { template_slug: templateSlug, input_data: inputData },
+    token,
+  });
+}
+
+export async function getGenerationStatus(
+  taskId: string,
+  token: string | null
+): Promise<GenerationStatus> {
+  return apiRequest<GenerationStatus>("GET", `/api/generate/${taskId}`, { token });
+}
+
+export async function getGenerationPreview(
+  taskId: string,
+  token: string | null
+): Promise<{ task_id: string; preview_text: string; is_truncated: boolean }> {
+  return apiRequest("GET", `/api/generate/${taskId}/preview`, { token });
+}
+
+export async function getGenerationHistory(
+  token: string | null,
+  page = 1,
+  templateSlug?: string
+): Promise<{ items: GenerationHistoryItem[]; total: number; page: number; limit: number }> {
+  const params = new URLSearchParams({ page: String(page) });
+  if (templateSlug) params.set("template_slug", templateSlug);
+  return apiRequest("GET", `/api/generate/history?${params}`, { token });
+}
+
+export async function downloadGeneration(
+  taskId: string,
+  format: "docx" | "pdf",
+  token: string | null
+): Promise<{ download_url: string; format: string }> {
+  return apiRequest("GET", `/api/generate/${taskId}/download?format=${format}`, { token });
+}

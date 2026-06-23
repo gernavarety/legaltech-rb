@@ -45,6 +45,7 @@ export default function NavBar() {
             <>
               <nav className="hidden md:flex items-center gap-1 text-sm">
                 <NavLink href="/dashboard" current={pathname}>Кабинет</NavLink>
+                <NavLink href="/generate" current={pathname}>Генератор</NavLink>
                 <NavLink href="/history" current={pathname}>История</NavLink>
                 <NavLink href="/pricing" current={pathname}>Тарифы</NavLink>
                 <NavLink href="/settings" current={pathname}>Настройки</NavLink>
@@ -68,6 +69,12 @@ export default function NavBar() {
             </>
           ) : (
             <>
+              <Link
+                href="/generate"
+                className="text-sm text-slate-600 hover:text-slate-900 px-3 py-2 transition"
+              >
+                Генератор
+              </Link>
               <Link
                 href="/pricing"
                 className="text-sm text-slate-600 hover:text-slate-900 px-3 py-2 transition"

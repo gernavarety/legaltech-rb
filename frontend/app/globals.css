@@ -70,3 +70,14 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Анимация прогресс-бара для страницы генерации */
+@keyframes progress-sweep {
+  0%   { transform: translateX(-100%); width: 40%; }
+  50%  { transform: translateX(100%); width: 60%; }
+  100% { transform: translateX(200%); width: 40%; }
+}
+
+.animate-progress {
+  animation: progress-sweep 1.8s ease-in-out infinite;
+}

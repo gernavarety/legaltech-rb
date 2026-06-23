@@ -21,6 +21,7 @@ const PUBLIC_PATHS = [
   "/payment",      // /payment/success, /payment/fail
   "/team/accept",  // принятие приглашения
   "/api/webhooks", // вебхуки Bepaid — без авторизации
+  "/generate",     // каталог шаблонов и форма доступны без входа (но генерация требует авторизации)
 ];
 
 function isPublicPath(pathname: string): boolean {

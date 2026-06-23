@@ -25,6 +25,7 @@ from routers import (
     usage_router,
     team_router,
 )
+from routers.generate import router as generate_router
 from tasks import celery_app, process_contract
 
 settings = get_settings()
@@ -81,6 +82,7 @@ app.include_router(subscriptions_router)
 app.include_router(webhooks_router)
 app.include_router(usage_router)
 app.include_router(team_router)
+app.include_router(generate_router)  # Генератор юридических документов
 
 
 # ── Системные эндпоинты ───────────────────────────────────────────────
