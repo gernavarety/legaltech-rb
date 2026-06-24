@@ -4,13 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
-const PLAN_BADGE: Record<string, { label: string; className: string }> = {
-  free:  { label: "FREE",  className: "bg-slate-100 text-slate-600 border-slate-200" },
-  solo:  { label: "SOLO",  className: "bg-blue-50 text-blue-700 border-blue-200" },
-  firm:  { label: "FIRM",  className: "bg-violet-50 text-violet-700 border-violet-200" },
-};
-
-// Страницы где навбар не нужен (auth страницы имеют свой дизайн)
 const HIDDEN_ON = ["/login", "/register", "/forgot-password"];
 
 export default function NavBar() {
@@ -26,70 +19,57 @@ export default function NavBar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+    <header className="sticky top-0 z-50 bg-[#0A0C14]/90 backdrop-blur-md border-b border-white/[0.06]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Лого */}
-        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-sm">Lex</span>
+        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-[#00E5CC]/10 border border-[#00E5CC]/30 rounded-lg flex items-center justify-center">
+            <span className="text-[#00E5CC] font-bold text-xs">Lex</span>
           </div>
-          <div>
-            <span className="font-bold text-slate-900 text-lg">LexAI</span>
-            <span className="text-blue-600 font-bold text-lg">.by</span>
-          </div>
+          <span className="font-semibold text-white text-[15px] tracking-tight">
+            LexAI<span className="text-[#00E5CC]">.by</span>
+          </span>
         </Link>
 
-        {/* Правая часть */}
-        <div className="flex items-center gap-3">
+        {/* Навигация */}
+        <div className="flex items-center gap-1">
           {user ? (
             <>
-              <nav className="hidden md:flex items-center gap-1 text-sm">
-                <NavLink href="/dashboard" current={pathname}>Кабинет</NavLink>
+              <nav className="hidden md:flex items-center gap-0.5 text-sm mr-3">
+                <NavLink href="/" current={pathname}>Анализ</NavLink>
                 <NavLink href="/generate" current={pathname}>Генератор</NavLink>
                 <NavLink href="/history" current={pathname}>История</NavLink>
                 <NavLink href="/pricing" current={pathname}>Тарифы</NavLink>
                 <NavLink href="/settings" current={pathname}>Настройки</NavLink>
               </nav>
-
-              {/* Кнопка загрузить договор */}
               <Link
                 href="/"
-                className="hidden md:inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+                className="hidden md:inline-flex items-center gap-1.5 bg-[#00E5CC] hover:bg-[#00CDB8] text-[#0A0C14] text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
               >
                 + Проверить договор
               </Link>
-
-              {/* Выход */}
               <button
                 onClick={handleSignOut}
-                className="text-sm text-slate-500 hover:text-slate-900 px-3 py-2 transition"
+                className="text-sm text-white/40 hover:text-white/70 px-3 py-2 transition-colors ml-1"
               >
                 Выйти
               </button>
             </>
           ) : (
             <>
-              <Link
-                href="/generate"
-                className="text-sm text-slate-600 hover:text-slate-900 px-3 py-2 transition"
-              >
-                Генератор
-              </Link>
-              <Link
-                href="/pricing"
-                className="text-sm text-slate-600 hover:text-slate-900 px-3 py-2 transition"
-              >
-                Тарифы
-              </Link>
+              <nav className="hidden md:flex items-center gap-0.5 text-sm mr-2">
+                <NavLink href="/generate" current={pathname}>Генератор</NavLink>
+                <NavLink href="/pricing" current={pathname}>Тарифы</NavLink>
+              </nav>
               <Link
                 href="/login"
-                className="text-sm text-slate-600 hover:text-slate-900 px-3 py-2 transition"
+                className="text-sm text-white/60 hover:text-white px-3 py-2 transition-colors"
               >
                 Войти
               </Link>
               <Link
                 href="/register"
-                className="text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition"
+                className="text-sm bg-[#00E5CC] hover:bg-[#00CDB8] text-[#0A0C14] font-semibold px-4 py-2 rounded-lg transition-colors"
               >
                 Начать бесплатно
               </Link>
@@ -101,23 +81,15 @@ export default function NavBar() {
   );
 }
 
-function NavLink({
-  href,
-  current,
-  children,
-}: {
-  href: string;
-  current: string;
-  children: React.ReactNode;
-}) {
-  const active = current === href || current.startsWith(href + "/");
+function NavLink({ href, current, children }: { href: string; current: string; children: React.ReactNode }) {
+  const active = current === href || (href !== "/" && current.startsWith(href + "/"));
   return (
     <Link
       href={href}
-      className={`px-3 py-2 rounded-lg text-sm transition ${
+      className={`px-3 py-2 rounded-lg text-sm transition-colors ${
         active
-          ? "bg-blue-50 text-blue-700 font-medium"
-          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+          ? "text-[#00E5CC] bg-[#00E5CC]/10"
+          : "text-white/60 hover:text-white hover:bg-white/[0.06]"
       }`}
     >
       {children}

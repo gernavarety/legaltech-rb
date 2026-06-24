@@ -22,6 +22,7 @@ const PUBLIC_PATHS = [
   "/team/accept",  // принятие приглашения
   "/api/webhooks", // вебхуки Bepaid — без авторизации
   "/generate",     // каталог шаблонов и форма доступны без входа (но генерация требует авторизации)
+  "/analyze",      // загрузка договора доступна без входа
 ];
 
 function isPublicPath(pathname: string): boolean {
@@ -33,9 +34,9 @@ function isPublicPath(pathname: string): boolean {
 function getSupabaseCookie(request: NextRequest): string | null {
   // Supabase хранит сессию в cookie: sb-<project-ref>-auth-token
   // Также возможен вариант с суффиксом .0, .1 для больших токенов
-  for (const [name, value] of request.cookies) {
+  for (const [name, cookie] of request.cookies) {
     if (name.startsWith("sb-") && name.includes("auth-token")) {
-      return value;
+      return cookie.value;
     }
   }
   return null;
@@ -48,6 +49,7 @@ export function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
+    pathname.startsWith("/api/") ||   // прокси к FastAPI — не проверяем авторизацию
     pathname.includes(".")
   ) {
     return NextResponse.next();
